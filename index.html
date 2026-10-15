@@ -434,13 +434,15 @@
 
             try {
                 errorDiv.textContent = "Реєстрація...";
-                const snapshot = await get(child(ref(db), `users/${login}`));
+                const userPathRef = ref(db, `users/${login}`);
+                const snapshot = await get(userPathRef);
+                
                 if (snapshot.exists()) {
                     errorDiv.textContent = "Цей логін вже зайнятий!";
                     return;
                 }
 
-                await set(ref(db, `users/${login}`), {
+                await set(userPathRef, {
                     password: pass,
                     score: 0,
                     level: 1,
@@ -453,7 +455,7 @@
                 userPassword = pass;
                 showApp();
             } catch (err) {
-                errorDiv.textContent = "Помилка зв'язку з базою!";
+                errorDiv.textContent = "Помилка бази! Перевір правила безпеки.";
                 console.error(err);
             }
         }
@@ -470,7 +472,8 @@
 
             try {
                 errorDiv.textContent = "Вхід...";
-                const snapshot = await get(child(ref(db), `users/${login}`));
+                const snapshot = await get(ref(db, `users/${login}`));
+                
                 if (!snapshot.exists()) {
                     errorDiv.textContent = "Користувача не знайдено!";
                     return;
@@ -488,7 +491,7 @@
                 userPassword = pass;
                 showApp();
             } catch (err) {
-                errorDiv.textContent = "Помилка зв'язку з базою!";
+                errorDiv.textContent = "Помилка бази! Перевір правила безпеки.";
                 console.error(err);
             }
         }
