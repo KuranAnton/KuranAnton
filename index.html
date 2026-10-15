@@ -3,409 +3,74 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Міні-Месенджер та Гра з Реєстрацією</title>
-    <style>
-        :root {
-            --bg-color: #0f172a;
-            --card-bg: #1e293b;
-            --text-color: #f8fafc;
-            --accent: #3b82f6;
-            --accent-hover: #2563eb;
-            --border: #334155;
-            --success: #10b981;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            margin: 0;
-            padding: 20px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-        }
-
-        .container {
-            width: 100%;
-            max-width: 600px;
-            background: var(--card-bg);
-            border-radius: 16px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            border: 1px solid var(--border);
-        }
-
-        /* Екран авторизації */
-        #authScreen {
-            padding: 40px;
-            text-align: center;
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-
-        #authScreen h2 {
-            margin: 0;
-            color: var(--accent);
-        }
-
-        .hidden {
-            display: none !important;
-        }
-
-        .tabs {
-            display: flex;
-            background: #0f172a;
-            border-bottom: 1px solid var(--border);
-        }
-
-        .tab-btn {
-            flex: 1;
-            padding: 15px;
-            background: none;
-            border: none;
-            color: var(--text-color);
-            font-size: 15px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: 0.3s;
-        }
-
-        .tab-btn.active {
-            background: var(--card-bg);
-            color: var(--accent);
-            border-bottom: 3px solid var(--accent);
-        }
-
-        .tab-content {
-            display: none;
-            padding: 20px;
-            height: 420px;
-            flex-direction: column;
-        }
-
-        .tab-content.active {
-            display: flex;
-        }
-
-        /* Чат */
-        .chat-messages {
-            flex: 1;
-            overflow-y: auto;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 10px;
-            margin-bottom: 10px;
-            background: rgba(0,0,0,0.1);
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-        }
-
-        .message {
-            padding: 8px 12px;
-            border-radius: 8px;
-            max-width: 80%;
-            word-break: break-word;
-            font-size: 14px;
-        }
-
-        .message.remote {
-            background: var(--border);
-            align-self: flex-start;
-        }
-
-        .message.user {
-            background: var(--accent);
-            align-self: flex-end;
-            margin-left: auto;
-        }
-
-        .msg-author {
-            font-size: 11px;
-            opacity: 0.7;
-            margin-bottom: 2px;
-            font-weight: bold;
-        }
-
-        .chat-input-box {
-            display: flex;
-            gap: 10px;
-        }
-
-        input, button {
-            padding: 10px 15px;
-            border-radius: 8px;
-            border: 1px solid var(--border);
-            font-size: 14px;
-        }
-
-        input {
-            flex: 1;
-            background: var(--bg-color);
-            color: var(--text-color);
-        }
-
-        button {
-            background: var(--accent);
-            color: white;
-            border: none;
-            cursor: pointer;
-            font-weight: bold;
-            transition: background 0.2s;
-        }
-
-        button:hover {
-            background: var(--accent-hover);
-        }
-
-        /* Гра та Рейтинг */
-        .game-layout {
-            display: flex;
-            gap: 20px;
-            height: 100%;
-        }
-
-        .game-panel {
-            flex: 1;
-            text-align: center;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .score {
-            font-size: 22px;
-            font-weight: bold;
-        }
-
-        .click-btn {
-            padding: 20px;
-            font-size: 18px;
-            background: var(--success);
-            border-radius: 50%;
-            width: 130px;
-            height: 130px;
-            cursor: pointer;
-            border: none;
-            color: white;
-            box-shadow: 0 5px 15px rgba(16, 185, 129, 0.4);
-            transition: transform 0.1s;
-        }
-
-        .click-btn:active {
-            transform: scale(0.95);
-        }
-
-        .leaderboard-panel {
-            width: 200px;
-            border-left: 1px solid var(--border);
-            padding-left: 15px;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .leaderboard-panel h3 {
-            margin-top: 0;
-            font-size: 16px;
-            text-align: center;
-        }
-
-        .leaderboard-list {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-            overflow-y: auto;
-            flex: 1;
-            font-size: 13px;
-        }
-
-        .leaderboard-item {
-            padding: 6px 8px;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
-            display: flex;
-            justify-content: space-between;
-        }
-    </style>
+    <title>Міні-Месенджер та Гра з прокачкою</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <div class="container">
-        <!-- Екран реєстрації (введення нікнейма) -->
-        <div id="authScreen">
-            <h2>👋 Вхід у Міні-Месенджер</h2>
-            <p>Введіть своє ім'я або нікнейм для участі в чаті та грі:</p>
-            <input type="text" id="usernameInput" placeholder="Ваш нікнейм..." maxlength="15">
-            <button onclick="registerUser()">Увійти</button>
+    <!-- Екран авторизації (Логін та Пароль) -->
+    <div id="authScreen" class="auth-screen">
+        <div class="auth-box">
+            <h2>🔐 Вхід / Реєстрація</h2>
+            <p>Введіть логін та пароль для збереження прогресу:</p>
+            <input type="text" id="loginInput" placeholder="Логін (нікнейм)..." maxlength="15">
+            <input type="password" id="passInput" placeholder="Пароль...">
+            <div class="auth-buttons">
+                <button onclick="handleLogin()">Увійти</button>
+                <button onclick="handleRegister()" class="btn-secondary">Зареєструватися</button>
+            </div>
+            <div id="authError" class="auth-error"></div>
+        </div>
+    </div>
+
+    <!-- Основний інтерфейс на весь екран -->
+    <div id="appContainer" class="main-container hidden">
+        <!-- Ліва частина: Чат -->
+        <div class="section chat-section">
+            <div class="section-header">
+                <h2>💬 Онлайн Чат</h2>
+                <span id="currentUserDisplay" class="user-badge"></span>
+            </div>
+            <div class="chat-messages" id="chatMessages">
+                <div class="message remote">Завантаження повідомлень...</div>
+            </div>
+            <div class="chat-input-box">
+                <input type="text" id="messageInput" placeholder="Введіть повідомлення..." onkeypress="handleKeyPress(event)">
+                <button onclick="sendMessage()">Надіслати</button>
+            </div>
         </div>
 
-        <!-- Основний контент (прихований до реєстрації) -->
-        <div id="appContainer" class="hidden">
-            <div class="tabs">
-                <button class="tab-btn active" onclick="switchTab('chat')">💬 Онлайн Чат</button>
-                <button class="tab-btn" onclick="switchTab('game')">🎮 Міні-Гра та Рейтинг</button>
+        <!-- Права частина: Міні-Гра, Прокачка та Рейтинг -->
+        <div class="section game-section">
+            <div class="section-header">
+                <h2>🎮 Кліккер-Грушка</h2>
+                <button onclick="logout()" class="btn-logout">Вийти</button>
             </div>
-
-            <!-- Вкладка Чату -->
-            <div id="chat" class="tab-content active">
-                <div class="chat-messages" id="chatMessages">
-                    <div class="message remote">Завантаження повідомлень...</div>
-                </div>
-                <div class="chat-input-box">
-                    <input type="text" id="messageInput" placeholder="Введіть повідомлення..." onkeypress="handleKeyPress(event)">
-                    <button onclick="sendMessage()">Надіслати</button>
-                </div>
-            </div>
-
-            <!-- Вкладка Гри та Референсів -->
-            <div id="game" class="tab-content">
-                <div class="game-layout">
-                    <div class="game-panel">
-                        <h2>Кліккер-Грушка 🍏</h2>
-                        <p>Тисни швидко!</p>
-                        <div class="score">Твій рахунок: <span id="scoreVal">0</span></div>
-                        <button class="click-btn" onclick="incrementScore()">ТИСНИ!</button>
+            
+            <div class="game-content">
+                <div class="game-panel">
+                    <div class="score">Баланс балів: <span id="scoreVal">0.00</span></div>
+                    <div class="click-power-info">Сила кліка: +<span id="powerVal">0.1</span></div>
+                    <button class="click-btn" onclick="incrementScore()">ТИСНИ!</button>
+                    
+                    <!-- Блок прокачки -->
+                    <div class="upgrade-box">
+                        <h3>⚡ Прокачка кліка (Рівень <span id="currentLevel">1</span>/10)</h3>
+                        <p id="upgradeDesc">Наступний рівень дасть +0.1 до кліка</p>
+                        <button id="upgradeBtn" class="upgrade-btn" onclick="buyUpgrade()">Купити за 200 балів</button>
                     </div>
-                    <div class="leaderboard-panel">
-                        <h3>🏆 Рекордсмени</h3>
-                        <ul class="leaderboard-list" id="leaderboardList">
-                            <li class="leaderboard-item">Завантаження...</li>
-                        </ul>
-                    </div>
+                </div>
+
+                <div class="leaderboard-panel">
+                    <h3>🏆 Топ гравців</h3>
+                    <ul class="leaderboard-list" id="leaderboardList">
+                        <li class="leaderboard-item">Завантаження...</li>
+                    </ul>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Firebase SDK через CDN -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getDatabase, ref, push, onChildAdded, set, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
-
-        const firebaseConfig = {
-            databaseURL: "https://antonkuran-efcb8-default-rtdb.europe-west1.firebasedatabase.app"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const db = getDatabase(app);
-        const messagesRef = ref(db, 'messages');
-        const scoresRef = ref(db, 'scores');
-
-        let currentUsername = localStorage.getItem('chat_username');
-        let myScore = 0;
-
-        // Перевірка чи користувач вже входив раніше
-        if (currentUsername) {
-            document.getElementById('authScreen').classList.add('hidden');
-            document.getElementById('appContainer').classList.remove('hidden');
-            initApp();
-        }
-
-        window.registerUser = function() {
-            const input = document.getElementById('usernameInput');
-            const name = input.value.trim();
-            if (!name) {
-                alert('Будь ласка, введіть нікнейм!');
-                return;
-            }
-
-            currentUsername = name;
-            localStorage.setItem('chat_username', currentUsername);
-
-            document.getElementById('authScreen').classList.add('hidden');
-            document.getElementById('appContainer').classList.remove('hidden');
-            initApp();
-        }
-
-        function initApp() {
-            const chatMessages = document.getElementById('chatMessages');
-            chatMessages.innerHTML = '';
-
-            // Слухаємо чат
-            onChildAdded(messagesRef, (snapshot) => {
-                const data = snapshot.val();
-                const msgDiv = document.createElement('div');
-                
-                const isMe = data.author === currentUsername;
-                msgDiv.className = isMe ? 'message user' : 'message remote';
-                
-                msgDiv.innerHTML = `<div class="msg-author">${data.author}</div><div>${data.text}</div>`;
-                
-                chatMessages.appendChild(msgDiv);
-                chatMessages.scrollTop = chatMessages.scrollHeight;
-            });
-
-            // Слухаємо таблицю лідерів
-            onValue(scoresRef, (snapshot) => {
-                const data = snapshot.val() || {};
-                const list = document.getElementById('leaderboardList');
-                list.innerHTML = '';
-
-                // Перетворюємо об'єкт у масив та сортуємо за очками
-                const sortedScores = Object.entries(data)
-                    .map(([username, score]) => ({ username, score }))
-                    .sort((a, b) => b.score - a.score);
-
-                if (sortedScores.length === 0) {
-                    list.innerHTML = '<li class="leaderboard-item">Ще немає рекордів</li>';
-                    return;
-                }
-
-                sortedScores.forEach((item, index) => {
-                    const li = document.createElement('li');
-                    li.className = 'leaderboard-item';
-                    li.innerHTML = `<span>${index + 1}. ${item.username}</span> <b>${item.score}</b>`;
-                    list.appendChild(li);
-                });
-            });
-        }
-
-        window.sendMessage = function() {
-            const input = document.getElementById('messageInput');
-            const text = input.value.trim();
-            if (!text) return;
-
-            push(messagesRef, {
-                author: currentUsername,
-                text: text,
-                timestamp: Date.now()
-            });
-
-            input.value = '';
-        }
-
-        window.handleKeyPress = function(e) {
-            if (e.key === 'Enter') {
-                sendMessage();
-            }
-        }
-
-        // Логіка кліккера з оновленням результату в Firebase
-        window.incrementScore = function() {
-            myScore++;
-            document.getElementById('scoreVal').textContent = myScore;
-
-            // Зберігаємо поточний рахунок гравця у Firebase
-            if (currentUsername) {
-                set(ref(db, 'scores/' + currentUsername), myScore);
-            }
-        }
-    </script>
-
-    <script>
-        function switchTab(tabId) {
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
-            
-            document.getElementById(tabId).classList.add('active');
-            event.currentTarget.classList.add('active');
-        }
-    </script>
+    <script type="module" src="script.js"></script>
 </body>
 </html>
