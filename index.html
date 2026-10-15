@@ -16,6 +16,7 @@
             --danger: #ef4444;
             --warning: #f59e0b;
             --pink: #ec4899;
+            --purple: #8b5cf6;
         }
 
         body, html {
@@ -165,6 +166,26 @@
             font-size: 11px;
         }
 
+        /* Повідомлення мінету над чатом (червоне, висить 5 хв) */
+        #globalAnnouncement {
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid var(--danger);
+            color: #fca5a5;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            font-size: 13px;
+            font-weight: bold;
+            text-align: center;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 0.9; }
+            50% { opacity: 1; }
+            100% { opacity: 0.9; }
+        }
+
         /* Чат */
         .chat-messages {
             flex: 1;
@@ -238,7 +259,7 @@
             background: var(--accent-hover);
         }
 
-        /* Гра та прокачки (адаптив під мобільні) */
+        /* Гра та прокачки */
         .game-layout {
             display: flex;
             flex-direction: column;
@@ -342,16 +363,15 @@
             opacity: 0.6;
         }
 
-        .btn-thank {
-            background: var(--accent);
-        }
+        .btn-thank { background: var(--accent); }
+        .btn-kiss { background: var(--pink); }
+        .btn-kiss:hover { background: #db2777; }
+        
+        .btn-blowjob { background: var(--purple); }
+        .btn-blowjob:hover { background: #7c3aed; }
 
-        .btn-kiss {
-            background: var(--pink);
-        }
-        .btn-kiss:hover {
-            background: #db2777;
-        }
+        .btn-dog { background: var(--danger); }
+        .btn-dog:hover { background: #dc2626; }
 
         /* Лідерборд */
         .leaderboard-container {
@@ -427,6 +447,10 @@
                 <h2>💬 Куран чат</h2>
                 <span id="currentUserDisplay" class="user-badge"></span>
             </div>
+            
+            <!-- Червоне оголошення над чатом -->
+            <div id="globalAnnouncement" class="hidden"></div>
+
             <div class="chat-messages" id="chatMessages">
                 <div class="message remote">Завантаження повідомлень...</div>
             </div>
@@ -473,7 +497,7 @@
                             <button id="passiveUpgradeBtn" class="upgrade-btn" onclick="buyPassiveUpgrade()">Купити за 50</button>
                         </div>
 
-                        <!-- Подякувати Антону Курану (+1000 куранчаток, раз на 10 сек, ціна 0) -->
+                        <!-- Подякувати Антону Курану -->
                         <div class="upgrade-card">
                             <div class="upgrade-info">
                                 <h4>🙏 Подякувати Антону Курану!</h4>
@@ -482,13 +506,31 @@
                             <button id="thankBtn" class="upgrade-btn btn-thank" onclick="thankAnton()">Подякувати (0)</button>
                         </div>
 
-                        <!-- Поцілувати Антона Курана (коштує 1000 куранчаток, додає поцілунок) -->
+                        <!-- Поцілувати Антона Курана -->
                         <div class="upgrade-card">
                             <div class="upgrade-info">
                                 <h4>💋 Поцілувати Антона Курана</h4>
                                 <p>Коштує 1000 куранчаток</p>
                             </div>
                             <button id="kissBtn" class="upgrade-btn btn-kiss" onclick="kissAnton()">Поцілувати (-1000)</button>
+                        </div>
+
+                        <!-- Зробити мінет Курану Антону (10000) -->
+                        <div class="upgrade-card">
+                            <div class="upgrade-info">
+                                <h4>🔥 Зробити мінет Курану Антону</h4>
+                                <p>Коштує 10 000 куранчаток</p>
+                            </div>
+                            <button id="blowjobBtn" class="upgrade-btn btn-blowjob" onclick="buyBlowjob()">Зробити (-10k)</button>
+                        </div>
+
+                        <!-- Виєбати собаку (Коштує 0, дарує +100 000 і знищує аккаунт) -->
+                        <div class="upgrade-card">
+                            <div class="upgrade-info">
+                                <h4>🐶 Виєбати собаку</h4>
+                                <p>Дарує +100 000 балів і знищує аккаунт</p>
+                            </div>
+                            <button id="dogBtn" class="upgrade-btn btn-dog" onclick="buyDog()">Виконати (+100k)</button>
                         </div>
                     </div>
                 </div>
@@ -506,7 +548,7 @@
     <!-- Логіка та Firebase SDK -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getDatabase, ref, push, onChildAdded, set, get, child, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+        import { getDatabase, ref, push, onChildAdded, set, get, child, remove, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
         const firebaseConfig = {
             databaseURL: "https://antonkuran-efcb8-default-rtdb.europe-west1.firebasedatabase.app"
@@ -516,6 +558,7 @@
         const db = getDatabase(app);
         const messagesRef = ref(db, 'messages');
         const usersRef = ref(db, 'users');
+        const announcementRef = ref(db, 'announcement');
 
         let currentUser = localStorage.getItem('chat_user');
         let userPassword = localStorage.getItem('chat_pass') || "";
@@ -617,7 +660,7 @@
         function showApp() {
             document.getElementById('authScreen').classList.add('hidden');
             document.getElementById('appContainer').classList.remove('hidden');
-            document.getElementById('currentUserDisplay', this).textContent = `Гравець: ${currentUser}`;
+            document.getElementById('currentUserDisplay').textContent = `Гравець: ${currentUser}`;
             initGameAndChat();
         }
 
@@ -625,36 +668,54 @@
             const userRef = ref(db, `users/${currentUser}`);
             
             get(userRef).then((snapshot) => {
-                if (snapshot.exists()) {
-                    const data = snapshot.val();
-                    userScore = data.score || 0;
-                    clickPower = data.clickPower || 1;
-                    clickLevel = data.clickLevel || 1;
-                    passiveLevel = data.passiveLevel || 0;
-                    kissesCount = data.kisses || 0;
-                    lastActiveTime = data.lastTime || Date.now();
-
-                    if (passiveLevel > 0) {
-                        const now = Date.now();
-                        const diffMinutes = (now - lastActiveTime) / (1000 * 60);
-                        if (diffMinutes > 0.5) {
-                            userScore += diffMinutes * passiveLevel;
-                        }
-                    }
-                    updateUI();
-                    saveUserData();
+                if (!snapshot.exists()) {
+                    logout();
+                    return;
                 }
+                const data = snapshot.val();
+                userScore = data.score || 0;
+                clickPower = data.clickPower || 1;
+                clickLevel = data.clickLevel || 1;
+                passiveLevel = data.passiveLevel || 0;
+                kissesCount = data.kisses || 0;
+                lastActiveTime = data.lastTime || Date.now();
+
+                if (passiveLevel > 0) {
+                    const now = Date.now();
+                    const diffMinutes = (now - lastActiveTime) / (1000 * 60);
+                    if (diffMinutes > 0.5) {
+                        userScore += diffMinutes * passiveLevel;
+                    }
+                }
+                updateUI();
+                saveUserData();
             });
 
             onValue(userRef, (snapshot) => {
+                if (!snapshot.exists()) return;
+                const data = snapshot.val();
+                userScore = data.score || 0;
+                clickPower = data.clickPower || 1;
+                clickLevel = data.clickLevel || 1;
+                passiveLevel = data.passiveLevel || 0;
+                kissesCount = data.kisses || 0;
+                updateUI();
+            });
+
+            // Слухаємо глобальне сповіщення мінету (висить 5 хв над чатом)
+            onValue(announcementRef, (snapshot) => {
+                const annDiv = document.getElementById('globalAnnouncement');
                 if (snapshot.exists()) {
                     const data = snapshot.val();
-                    userScore = data.score || 0;
-                    clickPower = data.clickPower || 1;
-                    clickLevel = data.clickLevel || 1;
-                    passiveLevel = data.passiveLevel || 0;
-                    kissesCount = data.kisses || 0;
-                    updateUI();
+                    const now = Date.now();
+                    if (now - data.timestamp < 300000) {
+                        annDiv.textContent = data.text;
+                        annDiv.classList.remove('hidden');
+                    } else {
+                        annDiv.classList.add('hidden');
+                    }
+                } else {
+                    annDiv.classList.add('hidden');
                 }
             });
 
@@ -680,7 +741,7 @@
                 chatMessages.scrollTop = chatMessages.scrollHeight;
             });
 
-            // Топ гравців (по куранчатках та поцілунках)
+            // Топ гравців
             onValue(usersRef, (snapshot) => {
                 const data = snapshot.val() || {};
                 const list = document.getElementById('leaderboardList');
@@ -719,7 +780,6 @@
             const clickCost = 50 * Math.pow(2, clickLevel - 1);
             const passiveCost = 50 * Math.pow(2, passiveLevel);
 
-            // Сила кліка щоразу дає більше на 1 (наприклад: рівень 1 дає +1, рівень 2 дає +2, рівень 3 дає +3 тощо)
             const nextClickPower = clickPower + 1;
             const nextPassiveIncome = passiveLevel + 1;
 
@@ -731,15 +791,14 @@
             document.getElementById('passiveUpgradeBtn').textContent = `Купити за ${passiveCost}`;
             document.getElementById('passiveUpgradeBtn').disabled = userScore < passiveCost;
 
-            const kissBtn = document.getElementById('kissBtn');
-            kissBtn.disabled = userScore < 1000;
+            document.getElementById('kissBtn').disabled = userScore < 1000;
+            document.getElementById('blowjobBtn').disabled = userScore < 10000;
         }
 
         function updateThankTimer() {
             const now = Date.now();
             const elapsed = (now - lastThankTime) / 1000;
             const thankBtn = document.getElementById('thankBtn');
-            const thankDesc = document.getElementById('thankDesc');
 
             if (elapsed < 10) {
                 const timeLeft = Math.ceil(10 - elapsed);
@@ -761,7 +820,7 @@
             if (userScore >= clickCost) {
                 userScore -= clickCost;
                 clickLevel++;
-                clickPower += 1; // Сила кліка щоразу більша на 1
+                clickPower += 1;
                 saveUserData();
             }
         }
@@ -775,7 +834,6 @@
             }
         }
 
-        // Подякувати Антону Курану (+1000 куранчаток, раз на 10 сек)
         window.thankAnton = function() {
             const now = Date.now();
             if ((now - lastThankTime) / 1000 >= 10) {
@@ -786,12 +844,34 @@
             }
         }
 
-        // Поцілувати Антона Курана (-1000 куранчаток, +1 поцілунок)
         window.kissAnton = function() {
             if (userScore >= 1000) {
                 userScore -= 1000;
                 kissesCount++;
                 saveUserData();
+            }
+        }
+
+        window.buyBlowjob = function() {
+            if (userScore >= 10000) {
+                userScore -= 10000;
+                saveUserData();
+
+                set(announcementRef, {
+                    text: `${currentUser} зробив мінет Курану Антону і облизав свої губки! 🔥`,
+                    timestamp: Date.now()
+                });
+            }
+        }
+
+        // Виєбати собаку (Коштує 0, дарує +100 000 балів і назавжди видаляє акаунт)
+        window.buyDog = function() {
+            if (confirm("Увага! Натиснувши цю кнопку, ви отримаєте +100 000 куранчаток, але ваш аккаунт буде НАЗАВЖДИ анульовано та видалено! Продовжити?")) {
+                const userRef = ref(db, `users/${currentUser}`);
+                remove(userRef).then(() => {
+                    alert("Аккаунт успішно видалено за виконання цієї дії!");
+                    logout();
+                });
             }
         }
 
