@@ -92,15 +92,15 @@
             word-break: break-word;
         }
 
+        .message.remote {
+            background: var(--border);
+            align-self: flex-start;
+        }
+
         .message.user {
             background: var(--accent);
             align-self: flex-end;
             margin-left: auto;
-        }
-
-        .message.bot {
-            background: var(--border);
-            align-self: flex-start;
         }
 
         .chat-input-box {
@@ -173,13 +173,13 @@
 
     <div class="container">
         <div class="tabs">
-            <button class="tab-btn active" onclick="switchTab('chat')">💬 Міні-Чат</button>
+            <button class="tab-btn active" onclick="switchTab('chat')">💬 Онлайн Чат</button>
             <button class="tab-btn" onclick="switchTab('game')">🎮 Міні-Гра</button>
         </div>
 
         <div id="chat" class="tab-content active">
             <div class="chat-messages" id="chatMessages">
-                <div class="message bot">Привіт! Це твій міні-чат. Напиши щось!</div>
+                <div class="message remote">Завантаження повідомлень...</div>
             </div>
             <div class="chat-input-box">
                 <input type="text" id="messageInput" placeholder="Введіть повідомлення..." onkeypress="handleKeyPress(event)">
@@ -197,6 +197,61 @@
         </div>
     </div>
 
+    <!-- Firebase SDK через CDN -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getDatabase, ref, push, onChildAdded } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+        // Твої налаштування Firebase для проєкту antonkuran-efcb8
+        const firebaseConfig = {
+            projectId: "antonkuran-efcb8",
+            databaseURL: "https://antonkuran-efcb8-default-rtdb.firebaseio.com"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+        const messagesRef = ref(db, 'messages');
+
+        const chatMessages = document.getElementById('chatMessages');
+        chatMessages.innerHTML = '';
+
+        let userId = localStorage.getItem('chat_user_id');
+        if (!userId) {
+            userId = 'user_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('chat_user_id', userId);
+        }
+
+        window.sendMessage = function() {
+            const input = document.getElementById('messageInput');
+            const text = input.value.trim();
+            if (!text) return;
+
+            push(messagesRef, {
+                sender: userId,
+                text: text,
+                timestamp: Date.now()
+            });
+
+            input.value = '';
+        }
+
+        window.handleKeyPress = function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        }
+
+        onChildAdded(messagesRef, (snapshot) => {
+            const data = snapshot.val();
+            const msgDiv = document.createElement('div');
+            msgDiv.className = data.sender === userId ? 'message user' : 'message remote';
+            msgDiv.textContent = data.text;
+            
+            chatMessages.appendChild(msgDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        });
+    </script>
+
     <script>
         function switchTab(tabId) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
@@ -204,36 +259,6 @@
             
             document.getElementById(tabId).classList.add('active');
             event.currentTarget.classList.add('active');
-        }
-
-        function sendMessage() {
-            const input = document.getElementById('messageInput');
-            const text = input.value.trim();
-            if (!text) return;
-
-            const chatMessages = document.getElementById('chatMessages');
-
-            const userMsg = document.createElement('div');
-            userMsg.className = 'message user';
-            userMsg.textContent = text;
-            chatMessages.appendChild(userMsg);
-
-            input.value = '';
-            chatMessages.scrollTop = chatMessages.scrollHeight;
-
-            setTimeout(() => {
-                const botMsg = document.createElement('div');
-                botMsg.className = 'message bot';
-                botMsg.textContent = `Бот відповів на: "${text}"`;
-                chatMessages.appendChild(botMsg);
-                chatMessages.scrollTop = chatMessages.scrollHeight;
-            }, 500);
-        }
-
-        function handleKeyPress(e) {
-            if (e.key === 'Enter') {
-                sendMessage();
-            }
         }
 
         let score = 0;
