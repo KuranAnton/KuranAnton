@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Міні-Месенджер та Гра з прокачкою</title>
+    <title>Міні-Месенджер та Гра з прокачками</title>
     <style>
         :root {
             --bg-color: #0f172a;
@@ -14,6 +14,7 @@
             --border: #334155;
             --success: #10b981;
             --danger: #ef4444;
+            --warning: #f59e0b;
         }
 
         body, html {
@@ -71,72 +72,87 @@
             background: #64748b !important;
         }
 
-        .btn-secondary:hover {
-            background: #475569 !important;
-        }
-
         .auth-error {
             color: var(--danger);
             font-size: 13px;
             min-height: 18px;
         }
 
-        /* Головний інтерфейс на весь екран */
+        /* Головний контейнер з табами */
         .main-container {
             width: 100vw;
             height: 100vh;
             display: flex;
+            flex-direction: column;
             box-sizing: border-box;
         }
 
-        .section {
-            flex: 1;
-            height: 100%;
+        /* Меню табів зверху */
+        .nav-tabs {
             display: flex;
+            background: #0b1329;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 14px;
+            background: none;
+            border: none;
+            color: var(--text-color);
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .tab-btn.active {
+            background: var(--card-bg);
+            color: var(--accent);
+            border-bottom: 3px solid var(--accent);
+        }
+
+        /* Контент вкладки */
+        .tab-pane {
+            display: none;
+            flex: 1;
             flex-direction: column;
-            padding: 20px;
+            padding: 15px;
             box-sizing: border-box;
+            overflow: hidden;
             background: var(--card-bg);
         }
 
-        .chat-section {
-            border-right: 2px solid var(--border);
-        }
-
-        .game-section {
-            background: #172033;
+        .tab-pane.active {
+            display: flex;
         }
 
         .section-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 15px;
+            margin-bottom: 12px;
             border-bottom: 1px solid var(--border);
-            padding-bottom: 10px;
+            padding-bottom: 8px;
         }
 
         .section-header h2 {
             margin: 0;
-            font-size: 20px;
+            font-size: 18px;
             color: var(--accent);
         }
 
         .user-badge {
-            font-size: 13px;
+            font-size: 12px;
             background: var(--border);
-            padding: 4px 10px;
+            padding: 4px 8px;
             border-radius: 20px;
         }
 
         .btn-logout {
             background: var(--danger);
-            padding: 6px 12px;
-            font-size: 12px;
-        }
-
-        .btn-logout:hover {
-            background: #dc2626;
+            padding: 5px 10px;
+            font-size: 11px;
         }
 
         /* Чат */
@@ -145,8 +161,8 @@
             overflow-y: auto;
             border: 1px solid var(--border);
             border-radius: 8px;
-            padding: 12px;
-            margin-bottom: 15px;
+            padding: 10px;
+            margin-bottom: 10px;
             background: rgba(0,0,0,0.2);
             display: flex;
             flex-direction: column;
@@ -156,7 +172,7 @@
         .message {
             padding: 8px 12px;
             border-radius: 8px;
-            max-width: 80%;
+            max-width: 85%;
             word-break: break-word;
             font-size: 14px;
         }
@@ -210,50 +226,54 @@
             background: var(--accent-hover);
         }
 
-        /* Гра та прокачка */
-        .game-content {
+        /* Гра та прокачки (адаптив під мобільні та ПК) */
+        .game-layout {
             flex: 1;
             display: flex;
-            gap: 20px;
-            overflow: hidden;
+            flex-direction: column;
+            gap: 15px;
+            overflow-y: auto;
         }
 
-        .game-panel {
-            flex: 1.2;
-            text-align: center;
+        @media (min-width: 768px) {
+            .game-layout {
+                flex-direction: row;
+            }
+        }
+
+        .game-main {
+            flex: 1;
             display: flex;
             flex-direction: column;
-            justify-content: center;
             align-items: center;
-            gap: 15px;
-            background: var(--card-bg);
-            border-radius: 12px;
-            border: 1px solid var(--border);
-            padding: 15px;
+            gap: 12px;
+            text-align: center;
         }
 
-        .score {
-            font-size: 24px;
+        .score-board {
+            font-size: 22px;
             font-weight: bold;
             color: var(--success);
         }
 
-        .click-power-info {
-            font-size: 14px;
+        .stats-info {
+            font-size: 13px;
             opacity: 0.8;
+            display: flex;
+            gap: 15px;
         }
 
         .click-btn {
-            padding: 20px;
-            font-size: 20px;
+            padding: 15px;
+            font-size: 18px;
             background: var(--success);
             border-radius: 50%;
-            width: 140px;
-            height: 140px;
+            width: 120px;
+            height: 120px;
             cursor: pointer;
             border: none;
             color: white;
-            box-shadow: 0 5px 20px rgba(16, 185, 129, 0.4);
+            box-shadow: 0 5px 15px rgba(16, 185, 129, 0.4);
             transition: transform 0.1s;
         }
 
@@ -261,30 +281,41 @@
             transform: scale(0.95);
         }
 
-        .upgrade-box {
+        /* Блоки прокачок */
+        .upgrades-container {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .upgrade-card {
             background: rgba(0,0,0,0.2);
             border: 1px solid var(--border);
-            padding: 12px;
+            padding: 10px 14px;
             border-radius: 10px;
-            width: 100%;
-            box-sizing: border-box;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            text-align: left;
         }
 
-        .upgrade-box h3 {
-            margin: 0 0 5px 0;
-            font-size: 14px;
+        .upgrade-info h4 {
+            margin: 0 0 4px 0;
+            font-size: 13px;
         }
 
-        .upgrade-box p {
-            margin: 0 0 10px 0;
-            font-size: 12px;
-            opacity: 0.8;
+        .upgrade-info p {
+            margin: 0;
+            font-size: 11px;
+            opacity: 0.7;
         }
 
         .upgrade-btn {
-            background: #f59e0b;
-            width: 100%;
-            padding: 8px;
+            background: var(--warning);
+            padding: 8px 12px;
+            font-size: 12px;
+            white-space: nowrap;
         }
 
         .upgrade-btn:hover {
@@ -297,22 +328,29 @@
             opacity: 0.6;
         }
 
-        .leaderboard-panel {
-            flex: 0.8;
-            background: var(--card-bg);
+        /* Лідерборд */
+        .leaderboard-container {
+            width: 100%;
+            max-height: 200px;
+            background: rgba(0,0,0,0.15);
             border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 15px;
+            border-radius: 10px;
+            padding: 10px;
             display: flex;
             flex-direction: column;
         }
 
-        .leaderboard-panel h3 {
-            margin-top: 0;
-            font-size: 16px;
+        @media (min-width: 768px) {
+            .leaderboard-container {
+                width: 260px;
+                max-height: none;
+            }
+        }
+
+        .leaderboard-container h3 {
+            margin: 0 0 8px 0;
+            font-size: 14px;
             text-align: center;
-            border-bottom: 1px solid var(--border);
-            padding-bottom: 8px;
         }
 
         .leaderboard-list {
@@ -321,11 +359,11 @@
             margin: 0;
             overflow-y: auto;
             flex: 1;
-            font-size: 13px;
+            font-size: 12px;
         }
 
         .leaderboard-item {
-            padding: 8px;
+            padding: 6px;
             border-bottom: 1px solid rgba(255,255,255,0.05);
             display: flex;
             justify-content: space-between;
@@ -349,10 +387,16 @@
         </div>
     </div>
 
-    <!-- Основний повноекранний додаток -->
+    <!-- Основний додаток з табами -->
     <div id="appContainer" class="main-container hidden">
-        <!-- Ліва частина: Чат -->
-        <div class="section chat-section">
+        <!-- Навігаційні вкладки зверху -->
+        <div class="nav-tabs">
+            <button class="tab-btn active" onclick="switchTab('chatTab', this)">💬 Онлайн Чат</button>
+            <button class="tab-btn" onclick="switchTab('gameTab', this)">🎮 Міні-Гра</button>
+        </div>
+
+        <!-- Вкладка 1: Чат -->
+        <div id="chatTab" class="tab-pane active">
             <div class="section-header">
                 <h2>💬 Онлайн Чат</h2>
                 <span id="currentUserDisplay" class="user-badge"></span>
@@ -366,27 +410,45 @@
             </div>
         </div>
 
-        <!-- Права частина: Гра та Прокачка -->
-        <div class="section game-section">
+        <!-- Вкладка 2: Міні-Гра та Прокачки -->
+        <div id="gameTab" class="tab-pane">
             <div class="section-header">
-                <h2>🎮 Кліккер-Грушка</h2>
+                <h2>🎮 Кліккер та Фарм</h2>
                 <button onclick="logout()" class="btn-logout">Вийти</button>
             </div>
             
-            <div class="game-content">
-                <div class="game-panel">
-                    <div class="score">Баланс балів: <span id="scoreVal">0.00</span></div>
-                    <div class="click-power-info">Сила кліка: +<span id="powerVal">0.1</span></div>
+            <div class="game-layout">
+                <div class="game-main">
+                    <div class="score-board">Баланс: <span id="scoreVal">0.00</span> балів</div>
+                    <div class="stats-info">
+                        <span>Сила кліка: +<span id="powerVal">1</span></span>
+                        <span>Дохід/хв: +<span id="passiveVal">0</span></span>
+                    </div>
+                    
                     <button class="click-btn" onclick="incrementScore()">ТИСНИ!</button>
                     
-                    <div class="upgrade-box">
-                        <h3>⚡ Прокачка кліка (Рівень <span id="currentLevel">1</span>/10)</h3>
-                        <p id="upgradeDesc">Наступний рівень дасть +0.1 до кліка</p>
-                        <button id="upgradeBtn" class="upgrade-btn" onclick="buyUpgrade()">Купити за 200 балів</button>
+                    <div class="upgrades-container">
+                        <!-- Прокачка кліка -->
+                        <div class="upgrade-card">
+                            <div class="upgrade-info">
+                                <h4>⚡ Сила кліка (Рівень <span id="clickLevel">1</span>)</h4>
+                                <p id="clickDesc">Наступний: +2 до кліка</p>
+                            </div>
+                            <button id="clickUpgradeBtn" class="upgrade-btn" onclick="buyClickUpgrade()">Купити за 50</button>
+                        </div>
+
+                        <!-- Прокачка пасивного доходу -->
+                        <div class="upgrade-card">
+                            <div class="upgrade-info">
+                                <h4>⏳ Пасивний дохід (Рівень <span id="passiveLevel">0</span>)</h4>
+                                <p id="passiveDesc">Наступний: +1 очко/хв</p>
+                            </div>
+                            <button id="passiveUpgradeBtn" class="upgrade-btn" onclick="buyPassiveUpgrade()">Купити за 50</button>
+                        </div>
                     </div>
                 </div>
 
-                <div class="leaderboard-panel">
+                <div class="leaderboard-container">
                     <h3>🏆 Топ гравців</h3>
                     <ul class="leaderboard-list" id="leaderboardList">
                         <li class="leaderboard-item">Завантаження...</li>
@@ -413,10 +475,10 @@
         let currentUser = localStorage.getItem('chat_user');
         let userPassword = localStorage.getItem('chat_pass') || "";
         let userScore = 0;
-        let userLevel = 1;
-        let clickPower = 0.1;
-
-        const upgradeCosts = [0, 200, 400, 600, 800, 1000, 1200, 1400, 1600, 1800];
+        let clickPower = 1;
+        let clickLevel = 1;
+        let passiveLevel = 0; // 0 рівень = 0 очок/хв
+        let lastActiveTime = Date.now();
 
         if (currentUser) {
             showApp();
@@ -445,8 +507,10 @@
                 await set(userPathRef, {
                     password: pass,
                     score: 0,
-                    level: 1,
-                    power: 0.1
+                    clickPower: 1,
+                    clickLevel: 1,
+                    passiveLevel: 0,
+                    lastTime: Date.now()
                 });
 
                 localStorage.setItem('chat_user', login);
@@ -455,7 +519,7 @@
                 userPassword = pass;
                 showApp();
             } catch (err) {
-                errorDiv.textContent = "Помилка бази! Перевір правила безпеки.";
+                errorDiv.textContent = "Помилка бази!";
                 console.error(err);
             }
         }
@@ -491,7 +555,7 @@
                 userPassword = pass;
                 showApp();
             } catch (err) {
-                errorDiv.textContent = "Помилка бази! Перевір правила безпеки.";
+                errorDiv.textContent = "Помилка бази!";
                 console.error(err);
             }
         }
@@ -511,16 +575,51 @@
 
         function initGameAndChat() {
             const userRef = ref(db, `users/${currentUser}`);
+            
+            get(userRef).then((snapshot) => {
+                if (snapshot.exists()) {
+                    const data = snapshot.val();
+                    userScore = data.score || 0;
+                    clickPower = data.clickPower || 1;
+                    clickLevel = data.clickLevel || 1;
+                    passiveLevel = data.passiveLevel || 0;
+                    lastActiveTime = data.lastTime || Date.now();
+
+                    // Нарахування оффлайн фарму за час відсутності
+                    if (passiveLevel > 0) {
+                        const now = Date.now();
+                        const diffMinutes = (now - lastActiveTime) / (1000 * 60);
+                        if (diffMinutes > 0.5) {
+                            const earned = diffMinutes * passiveLevel;
+                            userScore += earned;
+                        }
+                    }
+                    updateUI();
+                    saveUserData();
+                }
+            });
+
+            // Слухаємо дані користувача в реальному часі
             onValue(userRef, (snapshot) => {
                 if (snapshot.exists()) {
                     const data = snapshot.val();
                     userScore = data.score || 0;
-                    userLevel = data.level || 1;
-                    clickPower = data.power || 0.1;
+                    clickPower = data.clickPower || 1;
+                    clickLevel = data.clickLevel || 1;
+                    passiveLevel = data.passiveLevel || 0;
                     updateUI();
                 }
             });
 
+            // Часовий цикл пасивного фарму (кожну секунду додаємо частку від хвилини)
+            setInterval(() => {
+                if (passiveLevel > 0) {
+                    userScore += passiveLevel / 60; // додаємо щосекунди
+                    saveUserData();
+                }
+            }, 1000);
+
+            // Чат
             const chatMessages = document.getElementById('chatMessages');
             chatMessages.innerHTML = '';
             onChildAdded(messagesRef, (snapshot) => {
@@ -533,6 +632,7 @@
                 chatMessages.scrollTop = chatMessages.scrollHeight;
             });
 
+            // Топ гравців
             onValue(usersRef, (snapshot) => {
                 const data = snapshot.val() || {};
                 const list = document.getElementById('leaderboardList');
@@ -557,23 +657,26 @@
         }
 
         function updateUI() {
-            document.getElementById('scoreVal').textContent = userScore.toFixed(1);
-            document.getElementById('powerVal').textContent = clickPower.toFixed(1);
-            document.getElementById('currentLevel').textContent = userLevel;
+            document.getElementById('scoreVal').textContent = userScore.toFixed(2);
+            document.getElementById('powerVal').textContent = clickPower;
+            document.getElementById('clickLevel').textContent = clickLevel;
+            document.getElementById('passiveLevel').textContent = passiveLevel;
+            document.getElementById('passiveVal').textContent = passiveLevel;
 
-            const upgradeBtn = document.getElementById('upgradeBtn');
-            const upgradeDesc = document.getElementById('upgradeDesc');
+            // Розрахунок цін (ціна множиться на 2: 50 -> 100 -> 200 -> 400 і т.д.)
+            const clickCost = 50 * Math.pow(2, clickLevel - 1);
+            const passiveCost = 50 * Math.pow(2, passiveLevel);
 
-            if (userLevel >= 10) {
-                upgradeDesc.textContent = "Максимальний рівень досягнуто!";
-                upgradeBtn.textContent = "Максимум";
-                upgradeBtn.disabled = true;
-            } else {
-                const nextCost = upgradeCosts[userLevel];
-                upgradeDesc.textContent = `Ціна наступного рівня (+0.1 до кліка): ${nextCost} балів`;
-                upgradeBtn.textContent = `Купити за ${nextCost} балів`;
-                upgradeBtn.disabled = userScore < nextCost;
-            }
+            const nextClickPower = clickPower * 2;
+            const nextPassiveIncome = passiveLevel + 1;
+
+            document.getElementById('clickDesc').textContent = `Наступний: +${nextClickPower} до кліка`;
+            document.getElementById('clickUpgradeBtn').textContent = `Купити за ${clickCost}`;
+            document.getElementById('clickUpgradeBtn').disabled = userScore < clickCost;
+
+            document.getElementById('passiveDesc').textContent = `Наступний: +${nextPassiveIncome} очок/хв`;
+            document.getElementById('passiveUpgradeBtn').textContent = `Купити за ${passiveCost}`;
+            document.getElementById('passiveUpgradeBtn').disabled = userScore < passiveCost;
         }
 
         window.incrementScore = function() {
@@ -581,14 +684,21 @@
             saveUserData();
         }
 
-        window.buyUpgrade = function() {
-            if (userLevel >= 10) return;
-            const nextCost = upgradeCosts[userLevel];
+        window.buyClickUpgrade = function() {
+            const clickCost = 50 * Math.pow(2, clickLevel - 1);
+            if (userScore >= clickCost) {
+                userScore -= clickCost;
+                clickLevel++;
+                clickPower *= 2; // Сила множиться на 2
+                saveUserData();
+            }
+        }
 
-            if (userScore >= nextCost) {
-                userScore -= nextCost;
-                userLevel++;
-                clickPower = parseFloat((clickPower + 0.1).toFixed(1)); 
+        window.buyPassiveUpgrade = function() {
+            const passiveCost = 50 * Math.pow(2, passiveLevel);
+            if (userScore >= passiveCost) {
+                userScore -= passiveCost;
+                passiveLevel++; // Рівень пасивки +1 (дає +1 очко за хв)
                 saveUserData();
             }
         }
@@ -596,10 +706,21 @@
         function saveUserData() {
             set(ref(db, `users/${currentUser}`), {
                 password: userPassword,
-                score: parseFloat(userScore.toFixed(1)),
-                level: userLevel,
-                power: clickPower
+                score: parseFloat(userScore.toFixed(2)),
+                clickPower: clickPower,
+                clickLevel: clickLevel,
+                passiveLevel: passiveLevel,
+                lastTime: Date.now()
             });
+        }
+
+        // Перемикання табів (вкладок)
+        window.switchTab = function(tabId, btn) {
+            document.querySelectorAll('.tab-pane').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            
+            document.getElementById(tabId).classList.add('active');
+            btn.classList.add('active');
         }
 
         window.sendMessage = function() {
