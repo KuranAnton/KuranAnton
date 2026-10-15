@@ -1,1 +1,327 @@
+:root {
+    --bg-color: #0f172a;
+    --card-bg: #1e293b;
+    --text-color: #f8fafc;
+    --accent: #3b82f6;
+    --accent-hover: #2563eb;
+    --border: #334155;
+    --success: #10b981;
+    --danger: #ef4444;
+}
 
+body, html {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    overflow: hidden;
+}
+
+.hidden {
+    display: none !important;
+}
+
+/* Екран входу */
+.auth-screen {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.auth-box {
+    background: var(--card-bg);
+    padding: 30px;
+    border-radius: 16px;
+    border: 1px solid var(--border);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+    width: 320px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    text-align: center;
+}
+
+.auth-box h2 {
+    margin: 0;
+    color: var(--accent);
+}
+
+.auth-buttons {
+    display: flex;
+    gap: 10px;
+}
+
+.auth-buttons button {
+    flex: 1;
+}
+
+.btn-secondary {
+    background: #64748b !important;
+}
+
+.btn-secondary:hover {
+    background: #475569 !important;
+}
+
+.auth-error {
+    color: var(--danger);
+    font-size: 13px;
+    min-height: 18px;
+}
+
+/* Головний контейнер на весь екран (спліт-скрін) */
+.main-container {
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    box-sizing: border-box;
+}
+
+.section {
+    flex: 1;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+    box-sizing: border-box;
+    background: var(--card-bg);
+}
+
+.chat-section {
+    border-right: 2px solid var(--border);
+}
+
+.game-section {
+    background: #172033;
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 10px;
+}
+
+.section-header h2 {
+    margin: 0;
+    font-size: 20px;
+    color: var(--accent);
+}
+
+.user-badge {
+    font-size: 13px;
+    background: var(--border);
+    padding: 4px 10px;
+    border-radius: 20px;
+}
+
+.btn-logout {
+    background: var(--danger);
+    padding: 6px 12px;
+    font-size: 12px;
+}
+
+.btn-logout:hover {
+    background: #dc2626;
+}
+
+/* Чат на половині екрана */
+.chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 15px;
+    background: rgba(0,0,0,0.2);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.message {
+    padding: 8px 12px;
+    border-radius: 8px;
+    max-width: 80%;
+    word-break: break-word;
+    font-size: 14px;
+}
+
+.message.remote {
+    background: var(--border);
+    align-self: flex-start;
+}
+
+.message.user {
+    background: var(--accent);
+    align-self: flex-end;
+    margin-left: auto;
+}
+
+.msg-author {
+    font-size: 11px;
+    opacity: 0.7;
+    margin-bottom: 2px;
+    font-weight: bold;
+}
+
+.chat-input-box {
+    display: flex;
+    gap: 10px;
+}
+
+input, button {
+    padding: 10px 15px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    font-size: 14px;
+}
+
+input {
+    flex: 1;
+    background: var(--bg-color);
+    color: var(--text-color);
+}
+
+button {
+    background: var(--accent);
+    color: white;
+    border: none;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background 0.2s;
+}
+
+button:hover {
+    background: var(--accent-hover);
+}
+
+/* Гра та прокачка */
+.game-content {
+    flex: 1;
+    display: flex;
+    gap: 20px;
+    overflow: hidden;
+}
+
+.game-panel {
+    flex: 1.2;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+    background: var(--card-bg);
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    padding: 15px;
+}
+
+.score {
+    font-size: 24px;
+    font-weight: bold;
+    color: var(--success);
+}
+
+.click-power-info {
+    font-size: 14px;
+    opacity: 0.8;
+}
+
+.click-btn {
+    padding: 20px;
+    font-size: 20px;
+    background: var(--success);
+    border-radius: 50%;
+    width: 140px;
+    height: 140px;
+    cursor: pointer;
+    border: none;
+    color: white;
+    box-shadow: 0 5px 20px rgba(16, 185, 129, 0.4);
+    transition: transform 0.1s;
+}
+
+.click-btn:active {
+    transform: scale(0.95);
+}
+
+/* Блок покупки прокачки */
+.upgrade-box {
+    background: rgba(0,0,0,0.2);
+    border: 1px solid var(--border);
+    padding: 12px;
+    border-radius: 10px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.upgrade-box h3 {
+    margin: 0 0 5px 0;
+    font-size: 14px;
+}
+
+.upgrade-box p {
+    margin: 0 0 10px 0;
+    font-size: 12px;
+    opacity: 0.8;
+}
+
+.upgrade-btn {
+    background: #f59e0b;
+    width: 100%;
+    padding: 8px;
+}
+
+.upgrade-btn:hover {
+    background: #d97706;
+}
+
+.upgrade-btn:disabled {
+    background: #475569;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+/* Таблиця лідерів */
+.leaderboard-panel {
+    flex: 0.8;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+}
+
+.leaderboard-panel h3 {
+    margin-top: 0;
+    font-size: 16px;
+    text-align: center;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 8px;
+}
+
+.leaderboard-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    overflow-y: auto;
+    flex: 1;
+    font-size: 13px;
+}
+
+.leaderboard-item {
+    padding: 8px;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    display: flex;
+    justify-content: space-between;
+}
