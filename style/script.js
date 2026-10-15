@@ -11,6 +11,7 @@ const messagesRef = ref(db, 'messages');
 const usersRef = ref(db, 'users');
 
 let currentUser = localStorage.getItem('chat_user');
+let userPassword = localStorage.getItem('chat_pass') || "";
 let userScore = 0;
 let userLevel = 1;
 let clickPower = 0.1;
@@ -51,7 +52,9 @@ window.handleRegister = async function() {
     });
 
     localStorage.setItem('chat_user', login);
+    localStorage.setItem('chat_pass', pass);
     currentUser = login;
+    userPassword = pass;
     showApp();
 }
 
@@ -81,12 +84,15 @@ window.handleLogin = async function() {
     }
 
     localStorage.setItem('chat_user', login);
+    localStorage.setItem('chat_pass', pass);
     currentUser = login;
+    userPassword = pass;
     showApp();
 }
 
 window.logout = function() {
     localStorage.removeItem('chat_user');
+    localStorage.removeItem('chat_pass');
     location.reload();
 }
 
@@ -133,6 +139,11 @@ function initGameAndChat() {
             .map(([name, info]) => ({ name, score: info.score || 0 }))
             .sort((a, b) => b.score - a.score);
 
+        if (sorted.length === 0) {
+            list.innerHTML = '<li class="leaderboard-item">Ще немає рекордів</li>';
+            return;
+        }
+
         sorted.forEach((item, index) => {
             const li = document.createElement('li');
             li.className = 'leaderboard-item';
@@ -142,6 +153,7 @@ function initGameAndChat() {
     });
 }
 
+// Оновлення інтерфейсу гри
 function updateUI() {
     document.getElementById('scoreVal').textContent = userScore.toFixed(1);
     document.getElementById('powerVal').textContent = clickPower.toFixed(1);
@@ -176,24 +188,18 @@ window.buyUpgrade = function() {
     if (userScore >= nextCost) {
         userScore -= nextCost;
         userLevel++;
-        clickPower = parseFloat((clickPower + 0.1).toFixed(1)); // збільшуємо на 0.1
+        clickPower = parseFloat((clickPower + 0.1).toFixed(1)); 
         saveUserData();
     }
 }
 
 function saveUserData() {
     set(ref(db, `users/${currentUser}`), {
-        password: promptPasswordPlaceholder(), // Зберігаємо пароль незмінним
+        password: userPassword,
         score: parseFloat(userScore.toFixed(1)),
         level: userLevel,
         power: clickPower
     });
-}
-
-// Зберігаємо поточний пароль під час оновлення балів
-async function promptPasswordPlaceholder() {
-    const snap = await get(child(ref(db), `users/${currentUser}/password`));
-    return snap.val() || "";
 }
 
 window.sendMessage = function() {
