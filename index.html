@@ -174,7 +174,7 @@
             padding: 12px;
             border-radius: 8px;
             margin-bottom: 10px;
-            font-size: 15px;
+            font-size: 16px;
             font-weight: 900;
             text-align: center;
             text-transform: uppercase;
@@ -189,10 +189,11 @@
             100% { transform: scale(1); }
         }
 
-        /* Зроблено вікно чату коротшим по висоті для мобільних */
+        /* Стандартна висота вікна чату для смартфона та ПК */
         .chat-messages {
-            height: 180px;
-            max-height: 25vh;
+            flex: 1;
+            min-height: 320px;
+            max-height: 50vh;
             overflow-y: auto;
             border: 1px solid var(--border);
             border-radius: 8px;
@@ -573,32 +574,54 @@
         let lastThankTime = 0;
         let lastActiveTime = Date.now();
         let lastPlayedAnnouncementTime = 0;
+        let activeMelodyInterval = null;
 
-        // Функція програвання простої мелодії через Web Audio API
-        function playMelody() {
+        // Функція циклічного програвання гучної мелодії протягом 5 хвилин для всіх
+        function playLongMelody() {
             try {
                 const AudioContext = window.AudioContext || window.webkitAudioContext;
                 if (!AudioContext) return;
                 const ctx = new AudioContext();
                 
-                const notes = [261.63, 329.63, 392.00, 523.25]; // Ноти для простенької мелодії
-                notes.forEach((freq, index) => {
-                    const osc = ctx.createOscillator();
-                    const gain = ctx.createGain();
-                    osc.type = 'triangle';
-                    osc.frequency.value = freq;
-                    
-                    gain.gain.setValueAtTime(0.2, ctx.currentTime + index * 0.15);
-                    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + index * 0.15 + 0.3);
-                    
-                    osc.connect(gain);
-                    gain.connect(ctx.destination);
-                    
-                    osc.start(ctx.currentTime + index * 0.15);
-                    osc.stop(ctx.currentTime + index * 0.15 + 0.3);
-                });
+                if (activeMelodyInterval) {
+                    clearInterval(activeMelodyInterval);
+                }
+
+                const playLoop = () => {
+                    const notes = [261.63, 329.63, 392.00, 523.25, 659.25, 523.25, 392.00]; 
+                    notes.forEach((freq, index) => {
+                        try {
+                            const osc = ctx.createOscillator();
+                            const gain = ctx.createGain();
+                            osc.type = 'sawtooth'; // більш дзвінкий і гучний звук
+                            osc.frequency.value = freq;
+                            
+                            gain.gain.setValueAtTime(0.3, ctx.currentTime + index * 0.2);
+                            gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + index * 0.2 + 0.4);
+                            
+                            osc.connect(gain);
+                            gain.connect(ctx.destination);
+                            
+                            osc.start(ctx.currentTime + index * 0.2);
+                            osc.stop(ctx.currentTime + index * 0.2 + 0.4);
+                        } catch(err) {}
+                    });
+                };
+
+                playLoop();
+                // Повторюємо мелодію кожні 2 секунди протягом 5 хвилин (300 секунд)
+                let elapsedLoops = 0;
+                activeMelodyInterval = setInterval(() => {
+                    playLoop();
+                    elapsedLoops++;
+                    if (elapsedLoops >= 150) { // 150 * 2 секунди = 300 секунд (5 хвилин)
+                        clearInterval(activeMelodyInterval);
+                        activeMelodyInterval = null;
+                    }
+                }, 2000);
+
             } catch (e) {
-                console.log("Звук заблоковано браузером до взаємодії", e);
+                console.log("Звук заблоковано браузером до першої взаємодії", e);
             }
         }
 
@@ -734,7 +757,7 @@
                 updateUI();
             });
 
-            // Слухаємо глобальне сповіщення мінету
+            // Слухаємо глобальне сповіщення мінету та включаємо музику усім
             onValue(announcementRef, (snapshot) => {
                 const annDiv = document.getElementById('globalAnnouncement');
                 if (snapshot.exists()) {
@@ -744,10 +767,10 @@
                         annDiv.textContent = data.text;
                         annDiv.classList.remove('hidden');
 
-                        // Якщо з'явилося нове оголошення — граємо мелодію
+                        // Якщо з'явилося нове або активне оголошення, усім грає музика протягом 5 хв
                         if (data.timestamp > lastPlayedAnnouncementTime) {
                             lastPlayedAnnouncementTime = data.timestamp;
-                            playMelody();
+                            playLongMelody();
                         }
                     } else {
                         annDiv.classList.add('hidden');
@@ -894,8 +917,8 @@
             if (userScore >= 10000) {
                 userScore -= 10000;
                 saveUserData();
-                playMelody(); // граємо музику одразу при покупці
 
+                // Оновлюємо в базі, щоб усі користувачі одночасно отримали сповіщення і музику
                 set(announcementRef, {
                     text: `${currentUser} зробив мінет Курану Антону і облизав свої губки! 🔥`,
                     timestamp: Date.now()
