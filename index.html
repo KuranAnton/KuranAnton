@@ -142,7 +142,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 12px;
+            margin-bottom: 10px;
             border-bottom: 1px solid var(--border);
             padding-bottom: 8px;
         }
@@ -166,30 +166,33 @@
             font-size: 11px;
         }
 
-        /* Повідомлення мінету над чатом (червоне, висить 5 хв) */
+        /* Грубе та помітне червоне оголошення мінету над чатом */
         #globalAnnouncement {
-            background: rgba(239, 68, 68, 0.2);
-            border: 1px solid var(--danger);
-            color: #fca5a5;
-            padding: 10px;
+            background: rgba(239, 68, 68, 0.3);
+            border: 2px solid var(--danger);
+            color: #ff8080;
+            padding: 12px;
             border-radius: 8px;
             margin-bottom: 10px;
-            font-size: 13px;
-            font-weight: bold;
+            font-size: 15px;
+            font-weight: 900;
             text-align: center;
-            animation: pulse 2s infinite;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            box-shadow: 0 0 15px rgba(239, 68, 68, 0.4);
+            animation: pulse 1.5s infinite;
         }
 
         @keyframes pulse {
-            0% { opacity: 0.9; }
-            50% { opacity: 1; }
-            100% { opacity: 0.9; }
+            0% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+            100% { transform: scale(1); }
         }
 
-        /* Чат */
+        /* Зроблено вікно чату коротшим по висоті для мобільних */
         .chat-messages {
-            flex: 1;
-            min-height: 300px;
+            height: 180px;
+            max-height: 25vh;
             overflow-y: auto;
             border: 1px solid var(--border);
             border-radius: 8px;
@@ -382,7 +385,7 @@
             padding: 10px;
             display: flex;
             flex-direction: column;
-            max-height: 300px;
+            max-height: 250px;
         }
 
         @media (min-width: 768px) {
@@ -448,7 +451,7 @@
                 <span id="currentUserDisplay" class="user-badge"></span>
             </div>
             
-            <!-- Червоне оголошення над чатом -->
+            <!-- Червоне грубе оголошення мінету над чатом -->
             <div id="globalAnnouncement" class="hidden"></div>
 
             <div class="chat-messages" id="chatMessages">
@@ -479,7 +482,7 @@
                     <button class="click-btn" onclick="incrementScore()">ТИСНИ!</button>
                     
                     <div class="upgrades-container">
-                        <!-- Прокачка сили кліка (+1 за рівень, ціна х2) -->
+                        <!-- Прокачка сили кліка -->
                         <div class="upgrade-card">
                             <div class="upgrade-info">
                                 <h4>⚡ Сила кліка (Рівень <span id="clickLevel">1</span>)</h4>
@@ -524,7 +527,7 @@
                             <button id="blowjobBtn" class="upgrade-btn btn-blowjob" onclick="buyBlowjob()">Зробити (-10k)</button>
                         </div>
 
-                        <!-- Виєбати собаку (Коштує 0, дарує +100 000 і знищує аккаунт) -->
+                        <!-- Виєбати собаку -->
                         <div class="upgrade-card">
                             <div class="upgrade-info">
                                 <h4>🐶 Виєбати собаку</h4>
@@ -569,6 +572,35 @@
         let kissesCount = 0;
         let lastThankTime = 0;
         let lastActiveTime = Date.now();
+        let lastPlayedAnnouncementTime = 0;
+
+        // Функція програвання простої мелодії через Web Audio API
+        function playMelody() {
+            try {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                if (!AudioContext) return;
+                const ctx = new AudioContext();
+                
+                const notes = [261.63, 329.63, 392.00, 523.25]; // Ноти для простенької мелодії
+                notes.forEach((freq, index) => {
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.value = freq;
+                    
+                    gain.gain.setValueAtTime(0.2, ctx.currentTime + index * 0.15);
+                    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + index * 0.15 + 0.3);
+                    
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    
+                    osc.start(ctx.currentTime + index * 0.15);
+                    osc.stop(ctx.currentTime + index * 0.15 + 0.3);
+                });
+            } catch (e) {
+                console.log("Звук заблоковано браузером до взаємодії", e);
+            }
+        }
 
         if (currentUser) {
             showApp();
@@ -702,7 +734,7 @@
                 updateUI();
             });
 
-            // Слухаємо глобальне сповіщення мінету (висить 5 хв над чатом)
+            // Слухаємо глобальне сповіщення мінету
             onValue(announcementRef, (snapshot) => {
                 const annDiv = document.getElementById('globalAnnouncement');
                 if (snapshot.exists()) {
@@ -711,6 +743,12 @@
                     if (now - data.timestamp < 300000) {
                         annDiv.textContent = data.text;
                         annDiv.classList.remove('hidden');
+
+                        // Якщо з'явилося нове оголошення — граємо мелодію
+                        if (data.timestamp > lastPlayedAnnouncementTime) {
+                            lastPlayedAnnouncementTime = data.timestamp;
+                            playMelody();
+                        }
                     } else {
                         annDiv.classList.add('hidden');
                     }
@@ -856,6 +894,7 @@
             if (userScore >= 10000) {
                 userScore -= 10000;
                 saveUserData();
+                playMelody(); // граємо музику одразу при покупці
 
                 set(announcementRef, {
                     text: `${currentUser} зробив мінет Курану Антону і облизав свої губки! 🔥`,
@@ -864,7 +903,6 @@
             }
         }
 
-        // Виєбати собаку (Коштує 0, дарує +100 000 балів і назавжди видаляє акаунт)
         window.buyDog = function() {
             if (confirm("Увага! Натиснувши цю кнопку, ви отримаєте +100 000 куранчаток, але ваш аккаунт буде НАЗАВЖДИ анульовано та видалено! Продовжити?")) {
                 const userRef = ref(db, `users/${currentUser}`);
