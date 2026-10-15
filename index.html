@@ -432,24 +432,30 @@
                 return;
             }
 
-            const snapshot = await get(child(ref(db), `users/${login}`));
-            if (snapshot.exists()) {
-                errorDiv.textContent = "Цей логін вже зайнятий!";
-                return;
+            try {
+                errorDiv.textContent = "Реєстрація...";
+                const snapshot = await get(child(ref(db), `users/${login}`));
+                if (snapshot.exists()) {
+                    errorDiv.textContent = "Цей логін вже зайнятий!";
+                    return;
+                }
+
+                await set(ref(db, `users/${login}`), {
+                    password: pass,
+                    score: 0,
+                    level: 1,
+                    power: 0.1
+                });
+
+                localStorage.setItem('chat_user', login);
+                localStorage.setItem('chat_pass', pass);
+                currentUser = login;
+                userPassword = pass;
+                showApp();
+            } catch (err) {
+                errorDiv.textContent = "Помилка зв'язку з базою!";
+                console.error(err);
             }
-
-            await set(ref(db, `users/${login}`), {
-                password: pass,
-                score: 0,
-                level: 1,
-                power: 0.1
-            });
-
-            localStorage.setItem('chat_user', login);
-            localStorage.setItem('chat_pass', pass);
-            currentUser = login;
-            userPassword = pass;
-            showApp();
         }
 
         window.handleLogin = async function() {
@@ -462,23 +468,29 @@
                 return;
             }
 
-            const snapshot = await get(child(ref(db), `users/${login}`));
-            if (!snapshot.exists()) {
-                errorDiv.textContent = "Користувача не знайдено!";
-                return;
-            }
+            try {
+                errorDiv.textContent = "Вхід...";
+                const snapshot = await get(child(ref(db), `users/${login}`));
+                if (!snapshot.exists()) {
+                    errorDiv.textContent = "Користувача не знайдено!";
+                    return;
+                }
 
-            const userData = snapshot.val();
-            if (userData.password !== pass) {
-                errorDiv.textContent = "Невірний пароль!";
-                return;
-            }
+                const userData = snapshot.val();
+                if (userData.password !== pass) {
+                    errorDiv.textContent = "Невірний пароль!";
+                    return;
+                }
 
-            localStorage.setItem('chat_user', login);
-            localStorage.setItem('chat_pass', pass);
-            currentUser = login;
-            userPassword = pass;
-            showApp();
+                localStorage.setItem('chat_user', login);
+                localStorage.setItem('chat_pass', pass);
+                currentUser = login;
+                userPassword = pass;
+                showApp();
+            } catch (err) {
+                errorDiv.textContent = "Помилка зв'язку з базою!";
+                console.error(err);
+            }
         }
 
         window.logout = function() {
@@ -558,3 +570,54 @@
                 upgradeDesc.textContent = `Ціна наступного рівня (+0.1 до кліка): ${nextCost} балів`;
                 upgradeBtn.textContent = `Купити за ${nextCost} балів`;
                 upgradeBtn.disabled = userScore < nextCost;
+            }
+        }
+
+        window.incrementScore = function() {
+            userScore += clickPower;
+            saveUserData();
+        }
+
+        window.buyUpgrade = function() {
+            if (userLevel >= 10) return;
+            const nextCost = upgradeCosts[userLevel];
+
+            if (userScore >= nextCost) {
+                userScore -= nextCost;
+                userLevel++;
+                clickPower = parseFloat((clickPower + 0.1).toFixed(1)); 
+                saveUserData();
+            }
+        }
+
+        function saveUserData() {
+            set(ref(db, `users/${currentUser}`), {
+                password: userPassword,
+                score: parseFloat(userScore.toFixed(1)),
+                level: userLevel,
+                power: clickPower
+            });
+        }
+
+        window.sendMessage = function() {
+            const input = document.getElementById('messageInput');
+            const text = input.value.trim();
+            if (!text) return;
+
+            push(messagesRef, {
+                author: currentUser,
+                text: text,
+                timestamp: Date.now()
+            });
+
+            input.value = '';
+        }
+
+        window.handleKeyPress = function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        }
+    </script>
+</body>
+</html>
