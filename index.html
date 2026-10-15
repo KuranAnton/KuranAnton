@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Міні-Месенджер та Гра з прокачками</title>
+    <title>Куран чат та Куран гра</title>
     <style>
         :root {
             --bg-color: #0f172a;
@@ -15,6 +15,7 @@
             --success: #10b981;
             --danger: #ef4444;
             --warning: #f59e0b;
+            --pink: #ec4899;
         }
 
         body, html {
@@ -25,7 +26,8 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: var(--bg-color);
             color: var(--text-color);
-            overflow: hidden;
+            overflow-x: hidden;
+            overflow-y: auto;
         }
 
         .hidden {
@@ -34,11 +36,13 @@
 
         /* Екран входу / реєстрації */
         .auth-screen {
-            width: 100%;
-            height: 100%;
+            width: 100vw;
+            height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
+            padding: 20px;
+            box-sizing: border-box;
         }
 
         .auth-box {
@@ -47,7 +51,8 @@
             border-radius: 16px;
             border: 1px solid var(--border);
             box-shadow: 0 10px 25px rgba(0,0,0,0.4);
-            width: 320px;
+            width: 100%;
+            max-width: 340px;
             display: flex;
             flex-direction: column;
             gap: 15px;
@@ -57,6 +62,8 @@
         .auth-box h2 {
             margin: 0;
             color: var(--accent);
+            font-size: 20px;
+            line-height: 1.4;
         }
 
         .auth-buttons {
@@ -80,8 +87,8 @@
 
         /* Головний контейнер з табами */
         .main-container {
-            width: 100vw;
-            height: 100vh;
+            width: 100%;
+            min-height: 100vh;
             display: flex;
             flex-direction: column;
             box-sizing: border-box;
@@ -92,6 +99,9 @@
             display: flex;
             background: #0b1329;
             border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 100;
         }
 
         .tab-btn {
@@ -100,7 +110,7 @@
             background: none;
             border: none;
             color: var(--text-color);
-            font-size: 16px;
+            font-size: 15px;
             font-weight: bold;
             cursor: pointer;
             transition: 0.2s;
@@ -119,8 +129,8 @@
             flex-direction: column;
             padding: 15px;
             box-sizing: border-box;
-            overflow: hidden;
             background: var(--card-bg);
+            min-height: calc(100vh - 50px);
         }
 
         .tab-pane.active {
@@ -158,6 +168,7 @@
         /* Чат */
         .chat-messages {
             flex: 1;
+            min-height: 300px;
             overflow-y: auto;
             border: 1px solid var(--border);
             border-radius: 8px;
@@ -198,6 +209,7 @@
         .chat-input-box {
             display: flex;
             gap: 10px;
+            padding-bottom: 10px;
         }
 
         input, button {
@@ -226,13 +238,12 @@
             background: var(--accent-hover);
         }
 
-        /* Гра та прокачки (адаптив під мобільні та ПК) */
+        /* Гра та прокачки (адаптив під мобільні) */
         .game-layout {
-            flex: 1;
             display: flex;
             flex-direction: column;
             gap: 15px;
-            overflow-y: auto;
+            padding-bottom: 20px;
         }
 
         @media (min-width: 768px) {
@@ -251,7 +262,7 @@
         }
 
         .score-board {
-            font-size: 22px;
+            font-size: 20px;
             font-weight: bold;
             color: var(--success);
         }
@@ -261,6 +272,8 @@
             opacity: 0.8;
             display: flex;
             gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
         }
 
         .click-btn {
@@ -298,6 +311,7 @@
             justify-content: space-between;
             align-items: center;
             text-align: left;
+            gap: 10px;
         }
 
         .upgrade-info h4 {
@@ -328,21 +342,32 @@
             opacity: 0.6;
         }
 
+        .btn-thank {
+            background: var(--accent);
+        }
+
+        .btn-kiss {
+            background: var(--pink);
+        }
+        .btn-kiss:hover {
+            background: #db2777;
+        }
+
         /* Лідерборд */
         .leaderboard-container {
             width: 100%;
-            max-height: 200px;
             background: rgba(0,0,0,0.15);
             border: 1px solid var(--border);
             border-radius: 10px;
             padding: 10px;
             display: flex;
             flex-direction: column;
+            max-height: 300px;
         }
 
         @media (min-width: 768px) {
             .leaderboard-container {
-                width: 260px;
+                width: 280px;
                 max-height: none;
             }
         }
@@ -367,6 +392,7 @@
             border-bottom: 1px solid rgba(255,255,255,0.05);
             display: flex;
             justify-content: space-between;
+            align-items: center;
         }
     </style>
 </head>
@@ -375,7 +401,7 @@
     <!-- Екран авторизації -->
     <div id="authScreen" class="auth-screen">
         <div class="auth-box">
-            <h2>🔐 Вхід / Реєстрація</h2>
+            <h2> Ласкаво прошу до дому Курана Антона</h2>
             <p>Введіть логін та пароль:</p>
             <input type="text" id="loginInput" placeholder="Логін..." maxlength="15">
             <input type="password" id="passInput" placeholder="Пароль...">
@@ -391,14 +417,14 @@
     <div id="appContainer" class="main-container hidden">
         <!-- Навігаційні вкладки зверху -->
         <div class="nav-tabs">
-            <button class="tab-btn active" onclick="switchTab('chatTab', this)">💬 Онлайн Чат</button>
-            <button class="tab-btn" onclick="switchTab('gameTab', this)">🎮 Міні-Гра</button>
+            <button class="tab-btn active" onclick="switchTab('chatTab', this)">💬 Куран чат</button>
+            <button class="tab-btn" onclick="switchTab('gameTab', this)">🎮 Куран гра</button>
         </div>
 
-        <!-- Вкладка 1: Чат -->
+        <!-- Вкладка 1: Куран чат -->
         <div id="chatTab" class="tab-pane active">
             <div class="section-header">
-                <h2>💬 Онлайн Чат</h2>
+                <h2>💬 Куран чат</h2>
                 <span id="currentUserDisplay" class="user-badge"></span>
             </div>
             <div class="chat-messages" id="chatMessages">
@@ -410,25 +436,26 @@
             </div>
         </div>
 
-        <!-- Вкладка 2: Міні-Гра та Прокачки -->
+        <!-- Вкладка 2: Куран гра та прокачки -->
         <div id="gameTab" class="tab-pane">
             <div class="section-header">
-                <h2>🎮 Кліккер та Фарм</h2>
+                <h2>🎮 Куран гра</h2>
                 <button onclick="logout()" class="btn-logout">Вийти</button>
             </div>
             
             <div class="game-layout">
                 <div class="game-main">
-                    <div class="score-board">Баланс: <span id="scoreVal">0.00</span> балів</div>
+                    <div class="score-board">Куранчатка: <span id="scoreVal">0.00</span></div>
                     <div class="stats-info">
                         <span>Сила кліка: +<span id="powerVal">1</span></span>
                         <span>Дохід/хв: +<span id="passiveVal">0</span></span>
+                        <span>💋 Поцілунки: <span id="kissesVal">0</span></span>
                     </div>
                     
                     <button class="click-btn" onclick="incrementScore()">ТИСНИ!</button>
                     
                     <div class="upgrades-container">
-                        <!-- Прокачка кліка -->
+                        <!-- Прокачка сили кліка (+1 за рівень, ціна х2) -->
                         <div class="upgrade-card">
                             <div class="upgrade-info">
                                 <h4>⚡ Сила кліка (Рівень <span id="clickLevel">1</span>)</h4>
@@ -444,6 +471,24 @@
                                 <p id="passiveDesc">Наступний: +1 очко/хв</p>
                             </div>
                             <button id="passiveUpgradeBtn" class="upgrade-btn" onclick="buyPassiveUpgrade()">Купити за 50</button>
+                        </div>
+
+                        <!-- Подякувати Антону Курану (+1000 куранчаток, раз на 10 сек, ціна 0) -->
+                        <div class="upgrade-card">
+                            <div class="upgrade-info">
+                                <h4>🙏 Подякувати Антону Курану!</h4>
+                                <p id="thankDesc">Дає +1000 куранчаток (раз на 10 сек)</p>
+                            </div>
+                            <button id="thankBtn" class="upgrade-btn btn-thank" onclick="thankAnton()">Подякувати (0)</button>
+                        </div>
+
+                        <!-- Поцілувати Антона Курана (коштує 1000 куранчаток, додає поцілунок) -->
+                        <div class="upgrade-card">
+                            <div class="upgrade-info">
+                                <h4>💋 Поцілувати Антона Курана</h4>
+                                <p>Коштує 1000 куранчаток</p>
+                            </div>
+                            <button id="kissBtn" class="upgrade-btn btn-kiss" onclick="kissAnton()">Поцілувати (-1000)</button>
                         </div>
                     </div>
                 </div>
@@ -477,7 +522,9 @@
         let userScore = 0;
         let clickPower = 1;
         let clickLevel = 1;
-        let passiveLevel = 0; // 0 рівень = 0 очок/хв
+        let passiveLevel = 0;
+        let kissesCount = 0;
+        let lastThankTime = 0;
         let lastActiveTime = Date.now();
 
         if (currentUser) {
@@ -510,6 +557,7 @@
                     clickPower: 1,
                     clickLevel: 1,
                     passiveLevel: 0,
+                    kisses: 0,
                     lastTime: Date.now()
                 });
 
@@ -569,7 +617,7 @@
         function showApp() {
             document.getElementById('authScreen').classList.add('hidden');
             document.getElementById('appContainer').classList.remove('hidden');
-            document.getElementById('currentUserDisplay').textContent = `Гравець: ${currentUser}`;
+            document.getElementById('currentUserDisplay', this).textContent = `Гравець: ${currentUser}`;
             initGameAndChat();
         }
 
@@ -583,15 +631,14 @@
                     clickPower = data.clickPower || 1;
                     clickLevel = data.clickLevel || 1;
                     passiveLevel = data.passiveLevel || 0;
+                    kissesCount = data.kisses || 0;
                     lastActiveTime = data.lastTime || Date.now();
 
-                    // Нарахування оффлайн фарму за час відсутності
                     if (passiveLevel > 0) {
                         const now = Date.now();
                         const diffMinutes = (now - lastActiveTime) / (1000 * 60);
                         if (diffMinutes > 0.5) {
-                            const earned = diffMinutes * passiveLevel;
-                            userScore += earned;
+                            userScore += diffMinutes * passiveLevel;
                         }
                     }
                     updateUI();
@@ -599,7 +646,6 @@
                 }
             });
 
-            // Слухаємо дані користувача в реальному часі
             onValue(userRef, (snapshot) => {
                 if (snapshot.exists()) {
                     const data = snapshot.val();
@@ -607,16 +653,18 @@
                     clickPower = data.clickPower || 1;
                     clickLevel = data.clickLevel || 1;
                     passiveLevel = data.passiveLevel || 0;
+                    kissesCount = data.kisses || 0;
                     updateUI();
                 }
             });
 
-            // Часовий цикл пасивного фарму (кожну секунду додаємо частку від хвилини)
+            // Пасивний фарм щосекунди
             setInterval(() => {
                 if (passiveLevel > 0) {
-                    userScore += passiveLevel / 60; // додаємо щосекунди
+                    userScore += passiveLevel / 60;
                     saveUserData();
                 }
+                updateThankTimer();
             }, 1000);
 
             // Чат
@@ -632,14 +680,18 @@
                 chatMessages.scrollTop = chatMessages.scrollHeight;
             });
 
-            // Топ гравців
+            // Топ гравців (по куранчатках та поцілунках)
             onValue(usersRef, (snapshot) => {
                 const data = snapshot.val() || {};
                 const list = document.getElementById('leaderboardList');
                 list.innerHTML = '';
 
                 const sorted = Object.entries(data)
-                    .map(([name, info]) => ({ name, score: info.score || 0 }))
+                    .map(([name, info]) => ({ 
+                        name, 
+                        score: info.score || 0, 
+                        kisses: info.kisses || 0 
+                    }))
                     .sort((a, b) => b.score - a.score);
 
                 if (sorted.length === 0) {
@@ -650,7 +702,7 @@
                 sorted.forEach((item, index) => {
                     const li = document.createElement('li');
                     li.className = 'leaderboard-item';
-                    li.innerHTML = `<span>${index + 1}. ${item.name}</span> <b>${item.score.toFixed(1)}</b>`;
+                    li.innerHTML = `<span>${index + 1}. ${item.name}</span> <span><b>${item.score.toFixed(1)}</b> куранч. | 💋 ${item.kisses}</span>`;
                     list.appendChild(li);
                 });
             });
@@ -662,12 +714,13 @@
             document.getElementById('clickLevel').textContent = clickLevel;
             document.getElementById('passiveLevel').textContent = passiveLevel;
             document.getElementById('passiveVal').textContent = passiveLevel;
+            document.getElementById('kissesVal').textContent = kissesCount;
 
-            // Розрахунок цін (ціна множиться на 2: 50 -> 100 -> 200 -> 400 і т.д.)
             const clickCost = 50 * Math.pow(2, clickLevel - 1);
             const passiveCost = 50 * Math.pow(2, passiveLevel);
 
-            const nextClickPower = clickPower * 2;
+            // Сила кліка щоразу дає більше на 1 (наприклад: рівень 1 дає +1, рівень 2 дає +2, рівень 3 дає +3 тощо)
+            const nextClickPower = clickPower + 1;
             const nextPassiveIncome = passiveLevel + 1;
 
             document.getElementById('clickDesc').textContent = `Наступний: +${nextClickPower} до кліка`;
@@ -677,6 +730,25 @@
             document.getElementById('passiveDesc').textContent = `Наступний: +${nextPassiveIncome} очок/хв`;
             document.getElementById('passiveUpgradeBtn').textContent = `Купити за ${passiveCost}`;
             document.getElementById('passiveUpgradeBtn').disabled = userScore < passiveCost;
+
+            const kissBtn = document.getElementById('kissBtn');
+            kissBtn.disabled = userScore < 1000;
+        }
+
+        function updateThankTimer() {
+            const now = Date.now();
+            const elapsed = (now - lastThankTime) / 1000;
+            const thankBtn = document.getElementById('thankBtn');
+            const thankDesc = document.getElementById('thankDesc');
+
+            if (elapsed < 10) {
+                const timeLeft = Math.ceil(10 - elapsed);
+                thankBtn.textContent = `Зачекайте (${timeLeft}с)`;
+                thankBtn.disabled = true;
+            } else {
+                thankBtn.textContent = "Подякувати (+1000)";
+                thankBtn.disabled = false;
+            }
         }
 
         window.incrementScore = function() {
@@ -689,7 +761,7 @@
             if (userScore >= clickCost) {
                 userScore -= clickCost;
                 clickLevel++;
-                clickPower *= 2; // Сила множиться на 2
+                clickPower += 1; // Сила кліка щоразу більша на 1
                 saveUserData();
             }
         }
@@ -698,7 +770,27 @@
             const passiveCost = 50 * Math.pow(2, passiveLevel);
             if (userScore >= passiveCost) {
                 userScore -= passiveCost;
-                passiveLevel++; // Рівень пасивки +1 (дає +1 очко за хв)
+                passiveLevel++;
+                saveUserData();
+            }
+        }
+
+        // Подякувати Антону Курану (+1000 куранчаток, раз на 10 сек)
+        window.thankAnton = function() {
+            const now = Date.now();
+            if ((now - lastThankTime) / 1000 >= 10) {
+                userScore += 1000;
+                lastThankTime = now;
+                saveUserData();
+                updateThankTimer();
+            }
+        }
+
+        // Поцілувати Антона Курана (-1000 куранчаток, +1 поцілунок)
+        window.kissAnton = function() {
+            if (userScore >= 1000) {
+                userScore -= 1000;
+                kissesCount++;
                 saveUserData();
             }
         }
@@ -710,11 +802,11 @@
                 clickPower: clickPower,
                 clickLevel: clickLevel,
                 passiveLevel: passiveLevel,
+                kisses: kissesCount,
                 lastTime: Date.now()
             });
         }
 
-        // Перемикання табів (вкладок)
         window.switchTab = function(tabId, btn) {
             document.querySelectorAll('.tab-pane').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
