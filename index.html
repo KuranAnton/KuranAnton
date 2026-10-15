@@ -189,11 +189,11 @@
             100% { transform: scale(1); }
         }
 
-        /* Стандартна висота вікна чату для смартфона та ПК */
+        /* Стандартна висота вікна чату для смартфона */
         .chat-messages {
             flex: 1;
-            min-height: 320px;
-            max-height: 50vh;
+            min-height: 350px;
+            max-height: 55vh;
             overflow-y: auto;
             border: 1px solid var(--border);
             border-radius: 8px;
@@ -374,6 +374,9 @@
         .btn-blowjob { background: var(--purple); }
         .btn-blowjob:hover { background: #7c3aed; }
 
+        .btn-mute { background: #475569; }
+        .btn-mute:hover { background: #334155; }
+
         .btn-dog { background: var(--danger); }
         .btn-dog:hover { background: #dc2626; }
 
@@ -528,6 +531,15 @@
                             <button id="blowjobBtn" class="upgrade-btn btn-blowjob" onclick="buyBlowjob()">Зробити (-10k)</button>
                         </div>
 
+                        <!-- Заглушити музику (1010 монеток) -->
+                        <div class="upgrade-card">
+                            <div class="upgrade-info">
+                                <h4>🔇 Вимкнути звук тої хуйні</h4>
+                                <p>Коштує 1010 куранчаток (Вимкнути музику у всіх)</p>
+                            </div>
+                            <button id="muteBtn" class="upgrade-btn btn-mute" onclick="buyMute()">Заглушити (-1010)</button>
+                        </div>
+
                         <!-- Виєбати собаку -->
                         <div class="upgrade-card">
                             <div class="upgrade-info">
@@ -563,6 +575,7 @@
         const messagesRef = ref(db, 'messages');
         const usersRef = ref(db, 'users');
         const announcementRef = ref(db, 'announcement');
+        const muteRef = ref(db, 'muteSignal');
 
         let currentUser = localStorage.getItem('chat_user');
         let userPassword = localStorage.getItem('chat_pass') || "";
@@ -576,8 +589,8 @@
         let lastPlayedAnnouncementTime = 0;
         let activeMelodyInterval = null;
 
-        // Функція циклічного програвання гучної мелодії протягом 5 хвилин для всіх
-        function playLongMelody() {
+        // Функція класичного твору на піаніно (у стилі ноктюрна) протягом 5 хвилин
+        function playPianoMelody() {
             try {
                 const AudioContext = window.AudioContext || window.webkitAudioContext;
                 if (!AudioContext) return;
@@ -587,41 +600,54 @@
                     clearInterval(activeMelodyInterval);
                 }
 
-                const playLoop = () => {
-                    const notes = [261.63, 329.63, 392.00, 523.25, 659.25, 523.25, 392.00]; 
-                    notes.forEach((freq, index) => {
+                // Класичні ноти фортепіано (частоти в Гц)
+                const pianoNotes = [
+                    261.63, 329.63, 392.00, 523.25,  // C E G C
+                    440.00, 349.23, 329.63, 293.66,  // A F E D
+                    392.00, 329.63, 261.63, 196.00   // G E C G
+                ];
+
+                const playSequence = () => {
+                    pianoNotes.forEach((freq, index) => {
                         try {
                             const osc = ctx.createOscillator();
                             const gain = ctx.createGain();
-                            osc.type = 'sawtooth'; // більш дзвінкий і гучний звук
+                            osc.type = 'sine'; // м'який звук піаніно
                             osc.frequency.value = freq;
                             
-                            gain.gain.setValueAtTime(0.3, ctx.currentTime + index * 0.2);
-                            gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + index * 0.2 + 0.4);
+                            gain.gain.setValueAtTime(0.25, ctx.currentTime + index * 0.3);
+                            gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + index * 0.3 + 0.6);
                             
                             osc.connect(gain);
                             gain.connect(ctx.destination);
                             
-                            osc.start(ctx.currentTime + index * 0.2);
-                            osc.stop(ctx.currentTime + index * 0.2 + 0.4);
+                            osc.start(ctx.currentTime + index * 0.3);
+                            osc.stop(ctx.currentTime + index * 0.3 + 0.6);
                         } catch(err) {}
                     });
                 };
 
-                playLoop();
-                // Повторюємо мелодію кожні 2 секунди протягом 5 хвилин (300 секунд)
+                playSequence();
+                // Повторюємо твір кожні 4 секунди протягом 5 хвилин (300 секунд)
                 let elapsedLoops = 0;
                 activeMelodyInterval = setInterval(() => {
-                    playLoop();
+                    playSequence();
                     elapsedLoops++;
-                    if (elapsedLoops >= 150) { // 150 * 2 секунди = 300 секунд (5 хвилин)
-                        clearInterval(activeMelodyInterval);
-                        activeMelodyInterval = null;
+                    if (elapsedLoops >= 75) { // 75 * 4 секунди = 300 секунд (5 хвилин)
+                        stopMusic();
                     }
-                }, 2000);
+                }, 4000);
 
             } catch (e) {
-                console.log("Звук заблоковано браузером до першої взаємодії", e);
+                console.log("Звук заблоковано браузером", e);
+            }
+        }
+
+        // Повне припинення музики для себе
+        function stopMusic() {
+            if (activeMelodyInterval) {
+                clearInterval(activeMelodyInterval);
+                activeMelodyInterval = null;
             }
         }
 
@@ -757,7 +783,7 @@
                 updateUI();
             });
 
-            // Слухаємо глобальне сповіщення мінету та включаємо музику усім
+            // Слухаємо глобальне сповіщення мінету
             onValue(announcementRef, (snapshot) => {
                 const annDiv = document.getElementById('globalAnnouncement');
                 if (snapshot.exists()) {
@@ -767,16 +793,22 @@
                         annDiv.textContent = data.text;
                         annDiv.classList.remove('hidden');
 
-                        // Якщо з'явилося нове або активне оголошення, усім грає музика протягом 5 хв
                         if (data.timestamp > lastPlayedAnnouncementTime) {
                             lastPlayedAnnouncementTime = data.timestamp;
-                            playLongMelody();
+                            playPianoMelody();
                         }
                     } else {
                         annDiv.classList.add('hidden');
                     }
                 } else {
                     annDiv.classList.add('hidden');
+                }
+            });
+
+            // Слухаємо глобальну команду вимкнення звуку для всіх
+            onValue(muteRef, (snapshot) => {
+                if (snapshot.exists()) {
+                    stopMusic();
                 }
             });
 
@@ -854,6 +886,7 @@
 
             document.getElementById('kissBtn').disabled = userScore < 1000;
             document.getElementById('blowjobBtn').disabled = userScore < 10000;
+            document.getElementById('muteBtn').disabled = userScore < 1010;
         }
 
         function updateThankTimer() {
@@ -918,11 +951,21 @@
                 userScore -= 10000;
                 saveUserData();
 
-                // Оновлюємо в базі, щоб усі користувачі одночасно отримали сповіщення і музику
                 set(announcementRef, {
                     text: `${currentUser} зробив мінет Курану Антону і облизав свої губки! 🔥`,
                     timestamp: Date.now()
                 });
+            }
+        }
+
+        // Заглушити музику у всіх (1010 куранчаток)
+        window.buyMute = function() {
+            if (userScore >= 1010) {
+                userScore -= 1010;
+                saveUserData();
+
+                // Надсилаємо сигнал вимкнення звуку для всіх гравців у реальному часі
+                set(muteRef, { timestamp: Date.now() });
             }
         }
 
